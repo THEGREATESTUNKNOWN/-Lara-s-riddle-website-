@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account information and aggregate stats",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "highScores": {
+          "type": "object",
+          "properties": {
+            "riddle": { "type": "integer" },
+            "puzzle": { "type": "integer" }
+          }
+        },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "theme": { "type": "string" },
+            "volume": { "type": "number" }
+          }
+        }
+      },
+      "required": ["uid", "username", "email"]
+    },
+    "Score": {
+      "title": "Leaderboard Score",
+      "description": "Individual game session score",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "score": { "type": "integer" },
+        "type": { "type": "string", "enum": ["riddle", "puzzle"] },
+        "difficulty": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "username", "score", "type", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "scores/{scoreId}": {
+      "schema": "Score",
+      "description": "Global leaderboard scores"
+    }
+  }
+}

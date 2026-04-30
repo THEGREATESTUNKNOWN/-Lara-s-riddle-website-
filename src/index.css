@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --color-lavender: #F3E5F5;
+  --color-purple-dark: #4A148C;
+  --color-pink-accent: #F472B6;
+  --color-blue-accent: #60A5FA;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-lavender text-purple-dark font-sans;
+  }
+  
+  h1, h2, h3, h4 {
+    @apply font-display font-black tracking-tighter uppercase italic;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-8 py-3 rounded-full bg-pink-accent text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-pink-200 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  
+  .btn-secondary {
+    @apply px-8 py-3 rounded-full border-2 border-blue-accent text-blue-accent text-xs font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  
+  .card-pastel {
+    @apply bg-white/80 backdrop-blur-sm rounded-[32px] p-8 shadow-xl border border-white transition-all;
+  }
+  
+  .main-canvas {
+    @apply bg-white rounded-[48px] shadow-2xl shadow-purple-200 p-12 relative border-8 border-pink-50;
+  }
+}
