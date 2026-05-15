@@ -10,6 +10,8 @@ import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
 import { Brain, Puzzle as PuzzleIcon, Trophy, Sparkles, BookOpen, Loader2 } from 'lucide-react';
 import { Howl } from 'howler';
 
+import { getOrGenerateDailyPuzzle, DailyPuzzle } from './services/dailyChallenge';
+
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
   const { user, loading } = useAuth();
@@ -21,25 +23,28 @@ function AppContent() {
     localStorage.setItem('tutorial_seen', 'true');
   };
 
-  const [dailyImage, setDailyImage] = useState<{ url: string, title: string } | null>(null);
+  const [dailyPuzzle, setDailyPuzzle] = useState<DailyPuzzle | null>(null);
 
   useEffect(() => {
-    const challenges = [
-      { url: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80", title: "The Lavender Fields" },
-      { url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80", title: "Misty Mountains" },
-      { url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80", title: "Crystal Lake" },
-      { url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80", title: "Sunlight Woods" },
-      { url: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80", title: "Alpine Village" }
-    ];
-    
-    const today = new Date().toDateString();
-    // Seeded random based on date
-    let hash = 0;
-    for (let i = 0; i < today.length; i++) {
-      hash = today.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash) % challenges.length;
-    setDailyImage(challenges[index]);
+    const fetchDaily = async () => {
+      try {
+        const puzzle = await getOrGenerateDailyPuzzle();
+        setDailyPuzzle(puzzle);
+      } catch (error) {
+        console.error("Failed to fetch daily puzzle:", error);
+      }
+    };
+    fetchDaily();
+
+    // Check every minute for the 11:59 PM transition
+    const interval = setInterval(() => {
+      const now = new Date();
+      if (now.getHours() === 23 && now.getMinutes() === 59) {
+        fetchDaily();
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const [puzzleMode, setPuzzleMode] = useState<'standard' | 'daily'>('standard');
@@ -47,6 +52,10 @@ function AppContent() {
   const startDaily = () => {
     setPuzzleMode('daily');
     setCurrentPage('puzzles');
+  };
+
+  const startStandardRiddle = () => {
+    setCurrentPage('riddles');
   };
 
   const startStandardPuzzle = () => {
@@ -85,7 +94,7 @@ function AppContent() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button 
-                onClick={() => setCurrentPage('riddles')}
+                onClick={startStandardRiddle}
                 className="group card-pastel p-10 hover:bg-pink-50 transition-all border-b-4 border-pink-200 text-left relative overflow-hidden"
               >
                 <div className="absolute top-[-20%] right-[-10%] opacity-10 group-hover:opacity-20 transition-opacity">
@@ -109,21 +118,39 @@ function AppContent() {
               </button>
             </div>
 
-            <div className="mt-20 card-pastel p-8 border-none bg-gradient-to-br from-blue-100 to-pink-100 flex flex-col md:flex-row items-center gap-8 group/daily">
-               <div className="w-40 h-40 rounded-2xl overflow-hidden shadow-xl rotate-3 group-hover/daily:rotate-0 transition-transform duration-500">
-                  <img src={dailyImage?.url} alt="Daily" className="w-full h-full object-cover" />
-               </div>
-               <div className="text-left flex-1">
-                  <span className="text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-200/50 px-2 py-1 rounded">Daily Challenge</span>
-                  <h4 className="text-2xl font-bold mt-2">{dailyImage?.title || 'Loading...'}</h4>
-                  <p className="text-slate-600 mt-2">A fresh mental workout for today. Can you solve this puzzle faster than yesterday?</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+              <div className="md:col-span-2 card-pastel p-10 border-none bg-gradient-to-br from-blue-100 via-indigo-50 to-pink-100 flex flex-col md:flex-row items-center gap-12 group/daily-puzzle">
+                <div className="w-48 h-48 rounded-3xl overflow-hidden shadow-2xl transform group-hover/daily-puzzle:-rotate-3 transition-transform duration-500 border-4 border-white">
+                  {dailyPuzzle?.imageUrl ? (
+                    <img src={dailyPuzzle.imageUrl} alt="Daily" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-200 animate-pulse" />
+                  )}
+                </div>
+                <div className="text-center md:text-left flex-1">
+                  <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] bg-white px-4 py-1.5 rounded-full shadow-sm">Daily Holiday Puzzle</span>
+                    {dailyPuzzle?.holidayName && (
+                      <span className="text-[10px] font-black text-pink-600 uppercase tracking-[0.3em] bg-white px-4 py-1.5 rounded-full shadow-sm flex items-center gap-2">
+                        <Sparkles className="w-3 h-3" />
+                        {dailyPuzzle.holidayName}
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="text-4xl font-black text-purple-dark uppercase italic tracking-tighter leading-none">
+                    Today's Masterpiece
+                  </h4>
+                  <p className="text-sm text-slate-600 mt-4 font-bold leading-relaxed max-w-lg">
+                    A special puzzle featuring a holiday near today. Complete it before the 11:59 PM reset to claim your spot in the legends of {dailyPuzzle?.holidayName || 'the season'}.
+                  </p>
                   <button 
                     onClick={startDaily}
-                    className="mt-4 btn-primary"
+                    className="mt-8 btn-primary bg-blue-accent px-12 py-4 text-xs shadow-xl shadow-blue-200 transform group-hover/daily-puzzle:scale-105 transition-all"
                   >
-                    Play Daily Puzzle
+                    Piece Together the Magic
                   </button>
-               </div>
+                </div>
+              </div>
             </div>
 
             <div className="mt-12 flex justify-center gap-8 text-slate-400 font-medium">
@@ -143,7 +170,7 @@ function AppContent() {
           </div>
         );
       case 'riddles': return <RiddleGame />;
-      case 'puzzles': return <PuzzleGame initialImage={puzzleMode === 'daily' ? dailyImage?.url : undefined} />;
+      case 'puzzles': return <PuzzleGame initialImage={puzzleMode === 'daily' ? dailyPuzzle?.imageUrl : undefined} />;
       case 'leaderboard': return <LeaderboardList />;
       case 'login': return <LoginForm onToggle={() => setCurrentPage('signup')} onSuccess={() => setCurrentPage('home')} />;
       case 'signup': return <SignUpForm onToggle={() => setCurrentPage('login')} onSuccess={() => setCurrentPage('home')} />;

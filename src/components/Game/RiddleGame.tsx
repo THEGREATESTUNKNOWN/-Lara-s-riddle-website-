@@ -124,7 +124,9 @@ export function RiddleGame() {
         colors: ['#E6E6FA', '#FFB6C1', '#ADD8E6']
       });
       toast.success("Correct!");
-      const points = timeLeft * (DIFFICULTIES.indexOf(settings.difficulty) + 1);
+      
+      const multiplier = (DIFFICULTIES.indexOf(settings.difficulty) + 1);
+      const points = timeLeft * multiplier;
       setScore(prev => prev + points);
       
       // Auto increase difficulty if on a roll
@@ -246,8 +248,12 @@ export function RiddleGame() {
           className="main-canvas w-full mb-8 min-h-[300px] flex flex-col justify-center items-center text-center p-12 overflow-hidden"
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400" />
-          <span className="text-blue-accent font-black uppercase tracking-[0.3em] text-xs mb-6">Brain Teaser</span>
-          <p className="text-4xl md:text-5xl font-black text-purple-dark leading-tight tracking-tight">
+          <div className="flex flex-col items-center gap-1 mb-6">
+            <span className="text-blue-accent font-black uppercase tracking-[0.3em] text-[10px]">
+              Random Brain Teaser
+            </span>
+          </div>
+          <p className="text-4xl md:text-5xl font-black text-purple-dark leading-tight tracking-tight px-4">
             {currentRiddle?.question}
           </p>
         </motion.div>
