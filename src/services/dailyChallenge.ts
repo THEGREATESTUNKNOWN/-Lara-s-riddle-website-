@@ -67,7 +67,7 @@ export async function getOrGenerateDailyPuzzle(): Promise<DailyPuzzle> {
   const holiday = getClosestHoliday(targetDate);
   
   // Use professional Unsplash images for the topic
-  const imageUrl = `https://source.unsplash.com/featured/1200x800?${encodeURIComponent(holiday.query)}`;
+  const imageUrl = `https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=1200&q=80&q=${encodeURIComponent(holiday.query)}`;
   
   const puzzle: DailyPuzzle = {
     date: dateKey,
